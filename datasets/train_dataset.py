@@ -82,7 +82,8 @@ class TrainDataset(torch.utils.data.Dataset):
         except Exception as e:
             logging.info(f"ERROR image {image_path} couldn't be opened, it might be corrupted.")
             raise e
-        
+        T1=T.Resize((512,512))
+        pil_image=T1(pil_image)
         tensor_image = T.functional.to_tensor(pil_image)
         assert tensor_image.shape == torch.Size([3, 512, 512]), \
             f"Image {image_path} should have shape [3, 512, 512] but has {tensor_image.shape}."
