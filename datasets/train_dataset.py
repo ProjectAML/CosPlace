@@ -65,7 +65,7 @@ class TrainDataset(torch.utils.data.Dataset):
                                   contrast=args.contrast,
                                   saturation=args.saturation,
                                   hue=args.hue),
-                    T.RandomResizedCrop([224, 224], scale=[1-args.random_resized_crop, 1]),
+                    T.RandomResizedCrop([512, 512], scale=[1-args.random_resized_crop, 1]),
                     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 ])
     
@@ -84,8 +84,8 @@ class TrainDataset(torch.utils.data.Dataset):
             raise e
        
         tensor_image = T.functional.to_tensor(pil_image)
-        assert tensor_image.shape == torch.Size([3, 224, 224]), \
-            f"Image {image_path} should have shape [3, 224, 224] but has {tensor_image.shape}."
+        assert tensor_image.shape == torch.Size([3, 512, 512]), \
+            f"Image {image_path} should have shape [3, 512, 512] but has {tensor_image.shape}."
         
         if self.augmentation_device == "cpu":
             tensor_image = self.transform(tensor_image)
