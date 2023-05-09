@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 # Height and width of a single image
-H = 512
-W = 512
+H = 224
+W = 224
 TEXT_H = 175
 FONTSIZE = 80
 SPACE = 50  # Space between two images
