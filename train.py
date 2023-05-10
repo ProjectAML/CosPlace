@@ -13,6 +13,8 @@ import util
 import parser
 import commons
 import cosface_loss
+import sphereface_loss
+import arcface_loss
 import augmentations
 from cosplace_model import cosplace_network
 from datasets.test_dataset import TestDataset
@@ -49,6 +51,17 @@ model_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 groups = [TrainDataset(args, args.train_set_folder, M=args.M, alpha=args.alpha, N=args.N, L=args.L,
                        current_group=n, min_images_per_class=args.min_images_per_class) for n in range(args.groups_num)]
 # Each group has its own classifier, which depends on the number of classes in the group
+
+if args.loss == "cosface": 
+    classifiers = [cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group)) for group in groups]
+elif args.loss == "sphereface":
+    classifiers = [sphereface_loss.SphereFaceLoss(args.fc_output_dim, len(group)) for group in groups]
+elif args.loss == "arcface":
+    classifiers = [arcface_loss.ArcFaceLoss(args.fc_output_dim, len(group)) for group in groups]
+else:
+    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface'")
+    exit
+
 classifiers = [cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group)) for group in groups]
 classifiers_optimizers = [torch.optim.Adam(classifier.parameters(), lr=args.classifiers_lr) for classifier in classifiers]
 
