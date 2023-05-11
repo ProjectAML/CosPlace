@@ -65,7 +65,6 @@ else:
     logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface'")
     exit
 
-classifiers = [cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group)) for group in groups]
 classifiers_optimizers = [torch.optim.Adam(classifier.parameters(), lr=args.classifiers_lr) for classifier in classifiers]
 
 logging.info(f"Using {len(groups)} groups")
