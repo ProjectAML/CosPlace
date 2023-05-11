@@ -53,13 +53,13 @@ groups = [TrainDataset(args, args.train_set_folder, M=args.M, alpha=args.alpha, 
 # Each group has its own classifier, which depends on the number of classes in the group
 
 if args.loss == "cosface": 
-    logging.info("cosface loss")
+    logging.info("cosface loss is used")
     classifiers = [cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group)) for group in groups]
 elif args.loss == "sphereface":
-    logging.info("spherefase loss")
+    logging.info("spherefaCe loss is used")
     classifiers = [sphereface_loss.SphereFaceLoss(args.fc_output_dim, len(group)) for group in groups]
 elif args.loss == "arcface":
-    logging.info("arcface loss")
+    logging.info("arcface loss is used")
     classifiers = [arcface_loss.ArcFaceLoss(args.fc_output_dim, len(group)) for group in groups]
 else:
     logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface'")
