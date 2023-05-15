@@ -1,56 +1,42 @@
-#implementation based on article 'SphereFace: Deep Hypersphere Embedding for Face Recognition'
-
-from torch.autograd import Variable
 import torch
 import torch.nn as nn
-from torch.nn import Parameter
+import torch.nn.functional as F
 
-
-def cosine_sim(x1: torch.Tensor, x2: torch.Tensor, dim: int = 1, eps: float = 1e-8) -> torch.Tensor:
-    ip = torch.mm(x1, x2.t())
-    w1 = torch.norm(x1, 2, dim)
-    w2 = torch.norm(x2, 2, dim)
-    return ip / torch.ger(w1, w2).clamp(min=eps)
+import math
 
 
 class SphereFaceLoss(nn.Module):
-    def __init__(self, in_features: int, out_features: int, s: float = 30.0, m: float = 3):
-        super().__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.s= s
+    """ reference: <SphereFace: Deep Hypersphere Embedding for Face Recognition>"
+        It also used characteristic gradient detachment tricks proposed in
+        <SphereFace Revived: Unifying Hyperspherical Face Recognition>.
+    """
+    def __init__(self, feat_dim, num_class, s=30., m=1.5):
+        super(SphereFaceLoss, self).__init__()
+        self.feat_dim = feat_dim
+        self.num_class = num_class
+        self.s = s
         self.m = m
-        self.weight = Parameter(torch.Tensor(out_features, in_features))
-        self.mlambda = [
-                lambda x: x**0,
-                lambda x: x**1,
-                lambda x: 2*x**2-1,
-                lambda x: 4*x**3-3*x,
-                lambda x: 8*x**4-8*x**2+1,
-                lambda x: 16*x**5-20*x**3+5*x
-            ]
-        nn.init.xavier_uniform_(self.weight)
-    
-    def forward(self, inputs: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
-        cosine = cosine_sim(inputs, self.weight)
-        one_hot = torch.zeros_like(cosine)
-        one_hot.scatter_(1, label.view(-1, 1), 1.0)
+        self.w = nn.Parameter(torch.Tensor(feat_dim, num_class))
+        nn.init.xavier_normal_(self.w)
 
-        #Formulations from https://github.com/clcarwin/sphereface_pytorch
-        cos_m_theta = self.mlambda[self.m](cosine)
-        theta = Variable(cosine.data.acos())
-        k = (self.m*theta/3.14159265).floor()
-        n_one = k*0.0 - 1
-        phi_theta = (n_one**k) * cos_m_theta - 2*k
-        
-        output = one_hot * phi_theta + (1.0-one_hot) * cosine # Apply phi_theta only to the true label
+    def forward(self, x, y):
+        # weight normalization
+        with torch.no_grad():
+            self.w.data = F.normalize(self.w.data, dim=0)
 
-        output *= self.s
-        return output
-    
-    def __repr__(self):
-        return self.__class__.__name__ + '(' \
-               + 'in_features=' + str(self.in_features) \
-               + ', out_features=' + str(self.out_features) \
-               + ', s=' + str(self.s) \
-               + ', m=' + str(self.m) + ')'
+        # cos_theta and d_theta
+        cos_theta = F.normalize(x, dim=1).mm(self.w)
+        with torch.no_grad():
+            m_theta = torch.acos(cos_theta.clamp(-1.+1e-5, 1.-1e-5))
+            m_theta.scatter_(
+                1, y.view(-1, 1), self.m, reduce='multiply',
+            )
+            k = (m_theta / math.pi).floor()
+            sign = -2 * torch.remainder(k, 2) + 1  # (-1)**k
+            phi_theta = sign * torch.cos(m_theta) - 2. * k
+            d_theta = phi_theta - cos_theta
+
+        logits = self.s * (cos_theta + d_theta)
+        loss = F.cross_entropy(logits, y)
+
+        return loss
