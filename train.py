@@ -96,11 +96,35 @@ logging.info(f"There are {len(groups[0])} classes for the first group, " +
 
 
 if args.augmentation_device == "cuda":
-    gpu_augmentation = T.Compose([
-            augmentations.DeviceAgnosticColorJitter(brightness=args.brightness,
+    augmentation_applied=True
+    if args.augmentation_type=="colorjitter":
+        augmentation_type=augmentations.DeviceAgnosticColorJitter(brightness=args.brightness,
                                                     contrast=args.contrast,
                                                     saturation=args.saturation,
                                                     hue=args.hue),
+    elif args.augmentation_type=="brightness":
+        augmentation_type = augmentations.DeviceAgnosticBrightness(args.reduce_brightness)
+    elif args.augmentation_type=="contrast":
+        augmentation_type = augmentations.DeviceAgnosticContrast(args.increase_contrast)
+    elif args.augmentation_type=="saturation":
+        augmentation_type = augmentations.DeviceAgnosticSaturation(args.increase_saturation)
+    elif args.augmentation_type=="transformation":
+        augmentation_type = augmentations.DeviceAgnosticTransformation(args.new_transformation)
+    elif args.augmentation_type=="none":
+        augmentation_applied=False
+    else:
+        logging.debug("No valid augmentation type, please try again typing 'colorjitter', 'brightness' , 'contrast' , 'saturation' or 'none'")
+        exit
+    
+    if augmentation_applied:
+        gpu_augmentation = T.Compose([
+            augmentation_type,
+            augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
+                                                          scale=[1-args.random_resized_crop, 1]),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    else:
+         gpu_augmentation = T.Compose([
             augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
                                                           scale=[1-args.random_resized_crop, 1]),
             T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),

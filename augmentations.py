@@ -2,6 +2,10 @@
 import torch
 from typing import Tuple, Union
 import torchvision.transforms as T
+import random
+import torchsample as TS
+
+
 
 
 class DeviceAgnosticColorJitter(T.ColorJitter):
@@ -34,6 +38,85 @@ class DeviceAgnosticRandomResizedCrop(T.RandomResizedCrop):
         augmented_images = torch.cat(augmented_images)
         return augmented_images
 
+class DeviceAgnosticBrightness():
+    def __init__(self,target_brightness=0.65):
+        self.target_brightness=target_brightness
+    
+    def forward(self,images: torch.Tensor)->torch.Tensor:
+        assert len(images.shape) == 4, f"images should be a batch of images, but it has shape {images.shape}"
+        B, C, H, W = images.shape
+        offset=random.uniform(-0.5,0.5)
+        augmented_images=[]
+        for img in images:
+            if random.random()<0.5:
+                augmented_img=T.functional.adjust_brightness(img, self.target_brightness+offset).unsqueeze(0)
+                augmented_images.append(augmented_img)
+            else
+                augmented_images.append(img.unsqueeze(0))
+        augmented_images = torch.cat(augmented_images)
+        assert augmented_images.shape == torch.Size([B, C, H, W])
+        return augmented_images
+
+class DeviceAgnostiContrast():
+    def __init__(self,target_contrast=1.15):
+        self.target_contrast=target_contrast
+    
+    def forward(self,images: torch.Tensor)->torch.Tensor:
+        assert len(images.shape) == 4, f"images should be a batch of images, but it has shape {images.shape}"
+        B, C, H, W = images.shape
+        offset=random.uniform(-0.05,0.05)
+        augmented_images=[]
+        for img in images:
+            if random.random()<0.5:
+                augmented_img=T.functional.adjust_contrast(img, self.target_contrast+offset).unsqueeze(0)
+                augmented_images.append(augmented_img)
+            else
+                augmented_images.append(img.unsqueeze(0))
+        augmented_images = torch.cat(augmented_images)
+        assert augmented_images.shape == torch.Size([B, C, H, W])
+        return augmented_images
+
+class DeviceAgnostiSaturation():
+    def __init__(self,target_saturation=0.85):
+        self.target_saturation=target_saturation
+    
+    def forward(self,images: torch.Tensor)->torch.Tensor:
+        assert len(images.shape) == 4, f"images should be a batch of images, but it has shape {images.shape}"
+        B, C, H, W = images.shape
+        offset=random.uniform(-0.05,0.05)
+        augmented_images=[]
+        for img in images:
+            if random.random()<0.5:
+                augmented_img=T.functional.adjust_saturation(img, self.target_saturation+offset).unsqueeze(0)
+                augmented_images.append(augmented_img)
+            else
+                augmented_images.append(img.unsqueeze(0))
+        augmented_images = torch.cat(augmented_images)
+        assert augmented_images.shape == torch.Size([B, C, H, W])
+        return augmented_images
+
+class DeviceAgnosticTransformation():
+
+    def forward(self,images: torch.Tensor)->torch.Tensor:
+        assert len(images.shape) == 4, f"images should be a batch of images, but it has shape {images.shape}"
+        B, C, H, W = images.shape
+        augmented_images=[]
+        for img in images:
+            if random.random()<0.5:
+                augmented_img=T.RandomHorizontalFlip().unsqueeze(0),
+                augmented_img=T.Scale(256).unsqueeze(0),
+                augmented_img=T.CenterCrop(224).unsqueeze(0),
+                augmented_img=T.ToTensor().unsqueeze(0),
+                augmented_img=TS.transforms.Rotate(20).unsqueeze(0), # data augmentation: rotation 
+                augmented_img=TS.transforms.Rotate(-20).unsqueeze(0), # data augmentation: rotation
+                augmented_images.append(augmented_img)
+            else
+                augmented_images.append(img.unsqueeze(0))
+        augmented_images = torch.cat(augmented_images)
+        assert augmented_images.shape == torch.Size([B, C, H, W])
+        return augmented_images
+
+
 
 if __name__ == "__main__":
     """
@@ -45,13 +128,13 @@ if __name__ == "__main__":
     from skimage import data
     
     # Initialize DeviceAgnosticRandomResizedCrop
-    random_crop = DeviceAgnosticRandomResizedCrop(size=[256, 256], scale=[0.5, 1])
+    augs = DeviceAgnosticBrightness()
     # Create a batch with 2 astronaut images
     pil_image = Image.fromarray(data.astronaut())
     tensor_image = T.functional.to_tensor(pil_image).unsqueeze(0)
     images_batch = torch.cat([tensor_image, tensor_image])
     # Apply augmentation (individually on each of the 2 images)
-    augmented_batch = random_crop(images_batch)
+    augmented_batch = augs(images_batch)
     # Convert to PIL images
     augmented_image_0 = T.functional.to_pil_image(augmented_batch[0])
     augmented_image_1 = T.functional.to_pil_image(augmented_batch[1])
