@@ -101,34 +101,35 @@ if args.augmentation_device == "cuda":
         augmentation_type=augmentations.DeviceAgnosticColorJitter(brightness=args.brightness,
                                                     contrast=args.contrast,
                                                     saturation=args.saturation,
-                                                    hue=args.hue),
+                                                    hue=args.hue)
     elif args.augmentation_type=="brightness":
+        logging.info("data augmentation brightness")
         augmentation_type = augmentations.DeviceAgnosticBrightness(args.reduce_brightness)
     elif args.augmentation_type=="contrast":
+        logging.info("data augmentation contrast")
         augmentation_type = augmentations.DeviceAgnosticContrast(args.increase_contrast)
     elif args.augmentation_type=="saturation":
+        logging.info("data augmentation saturation")
         augmentation_type = augmentations.DeviceAgnosticSaturation(args.increase_saturation)
-    elif args.augmentation_type=="transformation":
-        augmentation_type = augmentations.DeviceAgnosticTransformation(args.new_transformation)
     elif args.augmentation_type=="none":
         augmentation_applied=False
     else:
         logging.debug("No valid augmentation type, please try again typing 'colorjitter', 'brightness' , 'contrast' , 'saturation' or 'none'")
         exit
     
-    if augmentation_applied:
-        gpu_augmentation = T.Compose([
-            augmentation_type,
-            augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
-                                                          scale=[1-args.random_resized_crop, 1]),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-    else:
-         gpu_augmentation = T.Compose([
-            augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
-                                                          scale=[1-args.random_resized_crop, 1]),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+if augmentation_applied:
+    gpu_augmentation = T.Compose([
+      augmentation_type,
+      augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
+                                                    scale=[1-args.random_resized_crop, 1]),
+      T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+else:
+    gpu_augmentation = T.Compose([
+      augmentations.DeviceAgnosticRandomResizedCrop([224, 224],
+                                                    scale=[1-args.random_resized_crop, 1]),
+      T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
 if args.use_amp16:
     scaler = torch.cuda.amp.GradScaler()
@@ -151,7 +152,7 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
     
     epoch_losses = np.zeros((0, 1), dtype=np.float32)
     for iteration in tqdm(range(args.iterations_per_epoch), ncols=100):
-        images, targets, _ = next(dataloader_iterator)
+        images, targets, _= next(dataloader_iterator)
         images, targets = images.to(args.device), targets.to(args.device)
         
         if args.augmentation_device == "cuda":

@@ -63,10 +63,9 @@ def parse_arguments(is_training: bool = True):
     
     parser.add_argument("--loss", type=str, default="cosface")
     parser.add_argument("--augmentation_type", type=str, default="colorjitter")
-    parser.add_argument("--reduce_brightness", type=float, default=0.65, help="_")
+    parser.add_argument("--reduce_brightness", type=float, default=0.6, help="_")
     parser.add_argument("--increase_contrast", type=float, default=1.15, help="_")
-    parser.add_argument("--increase_saturation", type=float, default=0.85, help="_")
-    parser.add_argument("--new_transformation", type=float, default=0.0, help="_")
+    parser.add_argument("--increase_saturation", type=float, default=0.8, help="_")
 
 
     args = parser.parse_args()
