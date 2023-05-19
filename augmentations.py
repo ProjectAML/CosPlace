@@ -95,7 +95,9 @@ class DeviceAgnosticSaturation():
         return augmented_images
 
 class DeviceAgnosticBrightnessContrastSaturation():
-    def __init__(self,target_saturation=0.8):
+    def __init__(self, target_brightness=0.6, target_contrast=1.15, target_saturation=0.8):
+        self.target_brightness=target_brightness
+        self.target_contrast=target_contrast
         self.target_saturation=target_saturation
     
     def __call__(self,images: torch.Tensor)->torch.Tensor:
@@ -108,8 +110,8 @@ class DeviceAgnosticBrightnessContrastSaturation():
         for img in images:
             if random.random()<0.5:
                 augmented_img=T.functional.adjust_brightness(img, self.target_brightness+offsetB)
-                augmented_img=T.functional.adjust_contrast(img, self.target_contrast+offsetC)
-                augmented_img=T.functional.adjust_saturation(img, self.target_saturation+offsetS)
+                augmented_img=T.functional.adjust_contrast(augmented_img, self.target_contrast+offsetC)
+                augmented_img=T.functional.adjust_saturation(augmented_img, self.target_saturation+offsetS)
                 augmented_images.append(augmented_img.unsqueeze(0))
             else:
                 augmented_images.append(img.unsqueeze(0))
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     tensor_image = T.functional.to_tensor(pil_image).unsqueeze(0)
     images_batch = torch.cat([tensor_image, tensor_image])
     # Apply augmentation (individually on each of the 2 images)
-    augmented_batch = augs.forward(images_batch)
+    augmented_batch = augs(images_batch)
     # Convert to PIL images
     augmented_image_0 = T.functional.to_pil_image(augmented_batch[0])
     augmented_image_1 = T.functional.to_pil_image(augmented_batch[1])
