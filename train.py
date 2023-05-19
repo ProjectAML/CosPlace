@@ -111,6 +111,9 @@ if args.augmentation_device == "cuda":
     elif args.augmentation_type=="saturation":
         logging.info("data augmentation saturation")
         augmentation_type = augmentations.DeviceAgnosticSaturation(args.increase_saturation)
+    elif args.augmentation_type=="brightness_contrast_saturation":
+        logging.info("data augmentation brightness_contrast_saturation")
+        augmentation_type = augmentations.DeviceAgnosticBrightnessContrastSaturation(args.reduce_brightness, args.increase_contrast, args.increase_saturation)
     elif args.augmentation_type=="none":
         augmentation_applied=False
     else:

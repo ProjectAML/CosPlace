@@ -75,7 +75,7 @@ class DeviceAgnostiContrast():
         assert augmented_images.shape == torch.Size([B, C, H, W])
         return augmented_images
 
-class DeviceAgnostiSaturation():
+class DeviceAgnosticSaturation():
     def __init__(self,target_saturation=0.8):
         self.target_saturation=target_saturation
     
@@ -88,6 +88,27 @@ class DeviceAgnostiSaturation():
             if random.random()<0.5:
                 augmented_img=T.functional.adjust_saturation(img, self.target_saturation+offset).unsqueeze(0)
                 augmented_images.append(augmented_img)
+            else:
+                augmented_images.append(img.unsqueeze(0))
+        augmented_images = torch.cat(augmented_images)
+        assert augmented_images.shape == torch.Size([B, C, H, W])
+        return augmented_images
+
+class DeviceAgnosticBrightnessContrastSaturation():
+    def __init__(self,target_saturation=0.8):
+        self.target_saturation=target_saturation
+    
+    def __call__(self,images: torch.Tensor)->torch.Tensor:
+        assert len(images.shape) == 4, f"images should be a batch of images, but it has shape {images.shape}"
+        B, C, H, W = images.shape
+        offset=random.uniform(-0.05,0.05)
+        augmented_images=[]
+        for img in images:
+            if random.random()<0.5:
+                augmented_img=T.functional.adjust_brightness(img, self.target_brightness+offset)
+                augmented_img=T.functional.adjust_contrast(img, self.target_contrast+offset)
+                augmented_img=T.functional.adjust_saturation(img, self.target_saturation+offset)
+                augmented_images.append(augmented_img.unsqueeze(0))
             else:
                 augmented_images.append(img.unsqueeze(0))
         augmented_images = torch.cat(augmented_images)
