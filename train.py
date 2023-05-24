@@ -32,7 +32,7 @@ logging.info(f"Arguments: {args}")
 logging.info(f"The outputs are being saved in {args.output_folder}")
 
 #### Model
-model = cosplace_network.GeoLocalizationNet(args.backbone, args.fc_output_dim)
+model = cosplace_network.GeoLocalizationNet(args.backbone, args.fc_output_dim, domain_adaptation = args.domain_adaptation)
 
 logging.info(f"There are {torch.cuda.device_count()} GPUs and {multiprocessing.cpu_count()} CPUs.")
 

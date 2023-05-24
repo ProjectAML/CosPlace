@@ -4,7 +4,7 @@ import logging
 import torchvision
 from torch import nn
 from typing import Tuple
-
+from cosplace_model.GRL import discriminator
 from cosplace_model.layers import Flatten, L2Norm, GeM
 
 # The number of channels in the last convolutional layer, the one before average pooling
@@ -18,7 +18,7 @@ CHANNELS_NUM_IN_LAST_CONV = {
 
 
 class GeoLocalizationNet(nn.Module):
-    def __init__(self, backbone : str, fc_output_dim : int):
+    def __init__(self, backbone : str, fc_output_dim : int, domain_adaptation=False):
         """Return a model for GeoLocalization.
         
         Args:
@@ -35,11 +35,19 @@ class GeoLocalizationNet(nn.Module):
             nn.Linear(features_dim, fc_output_dim),
             L2Norm()
         )
-    
-    def forward(self, x):
+        if domain_adaptation==True:
+            self.discriminator=discriminator(features_dim)
+        else:
+            None
+
+    def forward(self, x, grl=False):
         x = self.backbone(x)
         x = self.aggregation(x)
+        if grl==True:
+            x=self.discriminator(x)
+        
         return x
+    
 
 
 def get_pretrained_torchvision_model(backbone_name : str) -> torch.nn.Module:
