@@ -172,8 +172,8 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
         images, targets = images.to(args.device), targets.to(args.device)
         
         if args.domain_adaptation:
-            images_da, targets_da = next(da_dataloader)
-            images_da, targets_da = da_images.to(args.device), da_targets.to(args.device)
+            images_da, targets_da = next(dataloader_da)
+            images_da, targets_da = images_da.to(args.device), targets_da.to(args.device)
 
         if args.augmentation_device == "cuda":
             images = gpu_augmentation(images)
@@ -209,7 +209,7 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
             loss_da=0
             if args.domain_adaptation:
                 with torch.cuda.amp.autocast():
-                   o output_da=model(images_da, grl=True)
+                    output_da=model(images_da, grl=True)
                     loss_da=criterion(output_da,targets_da)
                     loss_da=loss_da*args.loss_weight_grl
                 scaler.scale(loss_da).backward()

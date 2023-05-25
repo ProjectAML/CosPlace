@@ -1,5 +1,6 @@
 
 import os
+import torch
 import numpy as np
 from glob import glob
 from PIL import Image
