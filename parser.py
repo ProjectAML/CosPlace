@@ -60,13 +60,16 @@ def parse_arguments(is_training: bool = True):
                         help="path of the folder with train/val/test sets")
     parser.add_argument("--save_dir", type=str, default="default",
                         help="name of directory on which to save the logs, under logs/save_dir")
-    
+    parser.add_argument("--target_dataset_folder", type=str, default="tokyo_nigth/test/queries", help="_")
+
     parser.add_argument("--loss", type=str, default="cosface")
     parser.add_argument("--augmentation_type", type=str, default="colorjitter")
     parser.add_argument("--reduce_brightness", type=float, default=0.6, help="_")
     parser.add_argument("--increase_contrast", type=float, default=1.15, help="_")
     parser.add_argument("--increase_saturation", type=float, default=0.8, help="_")
     parser.add_argument("--domain_adaptation", type=bool, default=False)
+    parser.add_argument("--loss_weight_grl", type=float, default=0.1)
+
 
     args = parser.parse_args()
     

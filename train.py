@@ -19,6 +19,8 @@ import augmentations
 from cosplace_model import cosplace_network
 from datasets.test_dataset import TestDataset
 from datasets.train_dataset import TrainDataset
+from datasets.target_dataset import TargetDataset, DomainAdaptationDataLoader
+from itertools import chain
 
 torch.backends.cudnn.benchmark = True  # Provides a speedup
 
@@ -45,7 +47,13 @@ model = model.to(args.device).train()
 
 #### Optimizer
 criterion = torch.nn.CrossEntropyLoss()
-model_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+
+if args.domain_adaptation:
+    target_dataset=TargetDataset(args.target_dataset_folder)
+    criterion_da = torch.nn.CrossEntropyLoss()
+
+model_parameters=chain(model.backbone.parameters(), model.aggregation.parameters(), model.discriminator.parameters() if args.domain_adaptation else [])
+model_optimizer = torch.optim.Adam(model_parameters, lr=args.lr)
 
 #### Datasets
 groups = [TrainDataset(args, args.train_set_folder, M=args.M, alpha=args.alpha, N=args.N, L=args.L,
@@ -150,6 +158,11 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
                                             batch_size=args.batch_size, shuffle=True,
                                             pin_memory=(args.device == "cuda"), drop_last=True)
     
+    if args.domain_adaptation:
+        dataloader_da=DomainAdaptationDataLoader(groups[current_group_num], target_dataset, num_workers=args.num_workers,
+                                            batch_size=24, shuffle=True,
+                                            pin_memory=(args.device == "cuda"), drop_last=True)
+
     dataloader_iterator = iter(dataloader)
     model = model.train()
     
@@ -158,6 +171,10 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
         images, targets, _= next(dataloader_iterator)
         images, targets = images.to(args.device), targets.to(args.device)
         
+        if args.domain_adaptation:
+            images_da, targets_da = next(da_dataloader)
+            images_da, targets_da = da_images.to(args.device), da_targets.to(args.device)
+
         if args.augmentation_device == "cuda":
             images = gpu_augmentation(images)
         
@@ -169,8 +186,17 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
             output = classifiers[current_group_num](descriptors, targets)
             loss = criterion(output, targets)
             loss.backward()
-            epoch_losses = np.append(epoch_losses, loss.item())
-            del loss, output, images
+
+            loss_da=0
+            if args.domain_adaptation:
+                output_da=model(images_da, grl=True)
+                loss_da=criterion(output_da,targets_da)
+                loss_da=loss_da*args.loss_weight_grl
+                loss_da.backward()
+                del output_da, images_da
+            
+            epoch_losses = np.append(epoch_losses, loss.item()+loss_da.item())
+            del loss, output, images, loss_da
             model_optimizer.step()
             classifiers_optimizers[current_group_num].step()
         else:  # Use AMP 16
@@ -179,8 +205,18 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
                 output = classifiers[current_group_num](descriptors, targets)
                 loss = criterion(output, targets)
             scaler.scale(loss).backward()
-            epoch_losses = np.append(epoch_losses, loss.item())
-            del loss, output, images
+
+            loss_da=0
+            if args.domain_adaptation:
+                with torch.cuda.amp.autocast():
+                   o output_da=model(images_da, grl=True)
+                    loss_da=criterion(output_da,targets_da)
+                    loss_da=loss_da*args.loss_weight_grl
+                scaler.scale(loss_da).backward()
+                del output_da, images_da
+
+            epoch_losses = np.append(epoch_losses, loss.item()+loss_da.item())
+            del loss, output, images, loss_da
             scaler.step(model_optimizer)
             scaler.step(classifiers_optimizers[current_group_num])
             scaler.update()
