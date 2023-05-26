@@ -21,7 +21,6 @@ class TargetDataset(data.Dataset):
 
         self.base_transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize((224,224)),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
         
@@ -57,7 +56,7 @@ class DomainAdaptationDataLoader(data.DataLoader):
             source_data,source_labels,_ = next(self.source_domain_iterator)
         except StopIteration:
             self.source_domain_iterator = self.source_domain_loader.__iter__()
-            source_data,source_labels = next(self.source_domain_iterator)
+            source_data,source_labels,_ = next(self.source_domain_iterator)
 
         try:
             target_data, target_labels = next(self.target_domain_iterator)
@@ -65,10 +64,5 @@ class DomainAdaptationDataLoader(data.DataLoader):
             self.target_domain_iterator = self.target_domain_loader.__iter__()
             target_data, target_labels  = next(self.target_domain_iterator)
 
-        source_labels = torch.tensor(source_labels)
-        target_labels = torch.tensor(target_labels)
-
-        batch_data = torch.cat((source_data, target_data), 0)
-        batch_labels = torch.cat((source_labels, target_labels), 0)
-        #batch = (torch.cat((source_data, target_data),0),torch.cat((source_labels, target_labels),0))
+        batch = (torch.cat((source_data, target_data),0),torch.cat((source_labels, target_labels),0))
         return batch_data, batch_labels
