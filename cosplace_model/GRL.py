@@ -50,4 +50,6 @@ class GradientReversal(torch.nn.Module):
         super().__init__()
   
     def forward(self, x):
+        x = torch.nn.functional.adaptive_avg_pool2d(x, (1,1))
+        x = x.view(x.shape[0], -1)
         return GradientReversalFunction.apply(x)
