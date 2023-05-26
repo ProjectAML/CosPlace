@@ -26,14 +26,15 @@ class TargetDataset(data.Dataset):
         ])
         
         #### Read paths and UTM coordinates for all images.
-        self.images_paths = sorted(glob(os.path.join(self.database_folder, "**", "*.jpg"), recursive=True))
+        self.images_paths = sorted(glob(os.path.join(self.dataset_folder, "**", "*.jpg"), recursive=True))
         
 
     def __getitem__(self, index):
         image_path = self.images_paths[index]
         pil_img = open_image(image_path)
         normalized_img = self.base_transform(pil_img)
-        return normalized_img, index
+        label = torch.tensor(1)
+        return normalized_img, label
     
     def __len__(self):
         return len(self.images_paths)
@@ -47,16 +48,16 @@ class DomainAdaptationDataLoader(data.DataLoader):
         self.source_domain_iterator = self.source_domain_loader.__iter__()
         self.target_domain_loader = data.DataLoader(target_dataset, batch_size=self.target_dim, **kwargs)
         self.target_domain_iterator = self.target_domain_loader.__iter__()
-    
+
     def __iter__(self):
         return self
 
     def __next__(self):
         try:
-            source_data, source_labels = next(self.source_domain_iterator)
+            source_data,source_labels,_ = next(self.source_domain_iterator)
         except StopIteration:
             self.source_domain_iterator = self.source_domain_loader.__iter__()
-            source_data, source_labels = next(self.source_domain_iterator)
+            source_data,source_labels = next(self.source_domain_iterator)
 
         try:
             target_data, target_labels = next(self.target_domain_iterator)
@@ -64,5 +65,10 @@ class DomainAdaptationDataLoader(data.DataLoader):
             self.target_domain_iterator = self.target_domain_loader.__iter__()
             target_data, target_labels  = next(self.target_domain_iterator)
 
-        batch = (torch.cat((source_data, target_data),0),torch.cat((source_labels, target_labels),0))
-        return batch
+        source_labels = torch.tensor(source_labels)
+        target_labels = torch.tensor(target_labels)
+
+        batch_data = torch.cat((source_data, target_data), 0)
+        batch_labels = torch.cat((source_labels, target_labels), 0)
+        #batch = (torch.cat((source_data, target_data),0),torch.cat((source_labels, target_labels),0))
+        return batch_data, batch_labels

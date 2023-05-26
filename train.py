@@ -160,7 +160,7 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
     
     if args.domain_adaptation:
         dataloader_da=DomainAdaptationDataLoader(groups[current_group_num], target_dataset, num_workers=args.num_workers,
-                                            batch_size=24, shuffle=True,
+                                            batch_size=16, shuffle=True,
                                             pin_memory=(args.device == "cuda"), drop_last=True)
 
     dataloader_iterator = iter(dataloader)

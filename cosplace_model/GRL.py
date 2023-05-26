@@ -1,3 +1,4 @@
+import os
 import torch
 from torch import nn
 from torch.autograd import Function
@@ -25,22 +26,28 @@ class GradientReversalFunction(Function):
     """
 
     @staticmethod
-    def forward(ctx, x, lambda_):
-        ctx.lambda_ = lambda_
+    #def forward(ctx, x, lambda_):
+    #    ctx.lambda_ = lambda_
+    #    return x.clone()
+    
+    def forward(ctx, x):
         return x.clone()
 
     @staticmethod
+    #def backward(ctx, grads):
+    #    lambda_ = ctx.lambda_
+    #    lambda_ = grads.new_tensor(lambda_)
+    #    dx = -lambda_ * grads
+    #    return dx, None
+    
     def backward(ctx, grads):
-        lambda_ = ctx.lambda_
-        lambda_ = grads.new_tensor(lambda_)
-        dx = -lambda_ * grads
+        dx = -grads.new_tensor(1) * grads
         return dx, None
 
 
 class GradientReversal(torch.nn.Module):
-    def __init__(self, lambda_=1):
-        super(GradientReversal, self).__init__()
-        self.lambda_ = lambda_
-
+    def __init__(self):
+        super().__init__()
+  
     def forward(self, x):
-        return GradientReversalFunction.apply(x, self.lambda_)
+        return GradientReversalFunction.apply(x)
