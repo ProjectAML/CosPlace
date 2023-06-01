@@ -89,9 +89,12 @@ def FDA_source_to_target_np( src_img, trg_img, L=0.1 ):
 
     return src_in_trg
 
-def apply_fda():
-    im_src = Image.open("demo_images/source.png").convert('RGB')
-    im_trg = Image.open("demo_images/target.png").convert('RGB')
+def apply_fda(source: str, target: str):
+    
+    im_src = Image.open(source).convert('RGB')
+    im_trg = Image.open(target).convert('RGB')
+
+    size= img_src.size
 
     im_src = im_src.resize( (1024,512), Image.BICUBIC )
     im_trg = im_trg.resize( (1024,512), Image.BICUBIC )
@@ -105,4 +108,4 @@ def apply_fda():
     src_in_trg = FDA_source_to_target_np( im_src, im_trg, L=0.01 )
 
     src_in_trg = src_in_trg.transpose((1,2,0))
-    return deprecated_scipy.toimage(src_in_trg, cmin=0.0, cmax=255.0).save('demo_images/src_in_tar.png')
+    return deprecated_scipy.toimage(src_in_trg, cmin=0.0, cmax=255.0).resize(size)
