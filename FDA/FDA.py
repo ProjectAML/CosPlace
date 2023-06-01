@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import deprecated_scipy
+from PIL import Image
 
 def extract_ampl_phase(fft_im):
     # fft_im: size should be bx3xhxwx2
@@ -94,7 +95,7 @@ def apply_fda(source: str, target: str):
     im_src = Image.open(source).convert('RGB')
     im_trg = Image.open(target).convert('RGB')
 
-    size= img_src.size
+    size= im_src.size
 
     im_src = im_src.resize( (1024,512), Image.BICUBIC )
     im_trg = im_trg.resize( (1024,512), Image.BICUBIC )
