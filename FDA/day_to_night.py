@@ -2,42 +2,6 @@ from PIL import Image, ImageEnhance, ImageFilter,ImageDraw,ImageChops
 from random import gauss
 import numpy as np
 
-def simulate_night(image):
-    enhancer = ImageEnhance.Brightness(image)
-    darkened = enhancer.enhance(0.9)
-
-    enhancer = ImageEnhance.Color(darkened)
-    desaturate = enhancer.enhance(0.95)
-
-    for i in range(desaturate.width):
-        for j in range(desaturate.height):
-            r, g, b = image.getpixel((i, j))
-            # Increase the blue channel by 30%
-            image.putpixel((i, j), (r, g, int(b * 1.15)))
-
-    enhancer = ImageEnhance.Contrast(image)
-    contrast = enhancer.enhance(1.1)
-
-    gradient = Image.new("RGBA", (contrast.width, contrast.height), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(gradient)
-    for y in range(contrast.height):
-        # Set the transparency of the pixel based on its position in the image
-        # The top of the image will be fully opaque (255), and the bottom will be fully transparent (0)
-        transparency = int(y / (contrast.height*1.2) * 255)
-        draw.line((0, y, contrast.width, y), fill=(0, 0, 0, transparency))
-
-    #rotate the gradient
-    gradient = gradient.rotate(180)
-
-    # Paste the gradient onto the image
-    contrast.paste(gradient, (0, 0), gradient)
-
-    image=dark_mask(contrast)
-
-    image=add_gaussian_noise(image)
-
-
-    return image
 
 def dark_mask(image):
     """ Create random circular masks"""
@@ -75,13 +39,56 @@ def add_gaussian_noise(image):
     
     return image
 
-if __name__ == "__main__":
-    image_path = '/content/codice/datasets/sf_xs/train/37.70/@0544204.32@4173406.33@10@S@037.70683@-122.49851@TYcjxIohRl--XFaR4OgdxA@@0@@@@201910@@.jpg'
-    day_image = Image.open(image_path)
+def generate_and_apply_gradient(image, factorMin, factorMax):
+    """ Add a gradient to the image """
+    # Create a new image with a black to transparent vertical gradient
+    gradient = Image.new("RGBA", (image.width, image.height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(gradient)
+    for y in range(image.height):
+        # Set the transparency of the pixel based on its position in the image
+        # The top of the image will be fully opaque (255), and the bottom will be fully transparent (0)
+        transparency = int(y / (image.height*1.2) * 255)
+        draw.line((0, y, image.width, y), fill=(0, 0, 0, transparency))
 
-    # Simulazione dell'effetto notturno 
-    night_image = night(day_image)
+    #rotate the gradient
+    gradient = gradient.rotate(180)
 
-    # Visualizzazione delle immagini
-    output_path = '/content/codice/datasets/night_image.jpg'
-    night_image.save(output_path)
+    # Paste the gradient onto the image
+    image.paste(gradient, (0, 0), gradient)
+
+    return image
+
+def simulate_night(image):
+    enhancer = ImageEnhance.Brightness(image)
+    factor = np.random.uniform(0.8, 0.9)
+    image = enhancer.enhance(factor)
+
+    enhancer = ImageEnhance.Color(image)
+    factor = np.random.uniform(0.9, 0.95)
+    image = enhancer.enhance(factor)
+
+    factor = np.random.uniform(1.05, 1.15)
+    for i in range(image.width):
+        for j in range(image.height):
+            r, g, b = image.getpixel((i, j))
+            # Increase the blue channel by 30%
+            image.putpixel((i, j), (r, g, int(b * factor)))
+    
+    enhancer = ImageEnhance.Contrast(image)
+    factor = np.random.uniform(1.05, 1.1)
+    image = enhancer.enhance(factor)
+ 
+    width, height = image.size
+    mask_color = (0, 0, 0, mask_intensity)
+    mask = Image.new('RGBA', (width, height), mask_color)
+
+    # Applicazione della maschera all'immagine
+    image = Image.alpha_composite(image, mask)
+ 
+    image = generate_and_apply_gradient(image, gradient_min, gradient_max)
+    image = add_gaussian_noise(image)
+    
+    return image
+
+
+
