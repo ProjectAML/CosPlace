@@ -65,4 +65,4 @@ class DomainAdaptationDataLoader(data.DataLoader):
             target_data, target_labels  = next(self.target_domain_iterator)
 
         batch = (torch.cat((source_data, target_data),0),torch.cat((source_labels, target_labels),0))
-        return batch_data, batch_labels
+        return batch

@@ -36,17 +36,19 @@ class GeoLocalizationNet(nn.Module):
             L2Norm()
         )
         if domain_adaptation==True:
+            print("with GRL")
             self.discriminator=get_discriminator(features_dim)
         else:
+            print("without GRL")
             None
 
     def forward(self, x, grl=False):
-        x = self.backbone(x)
-        x = self.aggregation(x)
+        features = self.backbone(x)
         if grl==True:
-            x=self.get_discriminator(x)
-        
-        return x
+            print("with GRL")
+            x=self.discriminator(features)
+            return x
+        return  self.aggregation(features)
     
 
 

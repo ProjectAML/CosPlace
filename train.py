@@ -193,9 +193,10 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
                 loss_da=criterion(output_da,targets_da)
                 loss_da=loss_da*args.loss_weight_grl
                 loss_da.backward()
+                loss_da=loss_da.item()
                 del output_da, images_da
             
-            epoch_losses = np.append(epoch_losses, loss.item()+loss_da.item())
+            epoch_losses = np.append(epoch_losses, loss.item()+loss_da)
             del loss, output, images, loss_da
             model_optimizer.step()
             classifiers_optimizers[current_group_num].step()
