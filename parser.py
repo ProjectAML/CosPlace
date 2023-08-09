@@ -69,6 +69,7 @@ def parse_arguments(is_training: bool = True):
     parser.add_argument("--increase_saturation", type=float, default=0.8, help="_")
     parser.add_argument("--domain_adaptation", type=bool, default=False)
     parser.add_argument("--loss_weight_grl", type=float, default=0.1)
+    parser.add_argument("--pseudo_target_folder", type=str, default=None)
 
 
     args = parser.parse_args()

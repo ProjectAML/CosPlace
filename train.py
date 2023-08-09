@@ -58,6 +58,12 @@ model_optimizer = torch.optim.Adam(model_parameters, lr=args.lr)
 #### Datasets
 groups = [TrainDataset(args, args.train_set_folder, M=args.M, alpha=args.alpha, N=args.N, L=args.L,
                        current_group=n, min_images_per_class=args.min_images_per_class) for n in range(args.groups_num)]
+
+if args.pseudo_target_folder:
+        pseudo_groups = [TrainDataset(args, args.pseudo_target_folder, M=args.M, alpha=args.alpha, N=args.N, L=args.L,
+                        current_group=n, min_images_per_class=args.min_images_per_class, 
+                        pseudo_target=True
+                        ) for n in range(args.groups_num)]
 # Each group has its own classifier, which depends on the number of classes in the group
 
 if args.loss == "cosface": 
@@ -154,14 +160,19 @@ for epoch_num in range(start_epoch_num, args.epochs_num):
     classifiers[current_group_num] = classifiers[current_group_num].to(args.device)
     util.move_to_device(classifiers_optimizers[current_group_num], args.device)
     
-    dataloader = commons.InfiniteDataLoader(groups[current_group_num], num_workers=args.num_workers,
+    batch_size = args.batch_size
+    if args.pseudo_target_folder:
+      batch_size = int(batch_size / 2)
+
+    dataloader = commons.InfiniteDataLoader(groups[current_group_num], pseudo_dataset = pseudo_groups[current_group_num] if args.pseudo_target_folder else None, num_workers=args.num_workers,
                                             batch_size=args.batch_size, shuffle=True,
                                             pin_memory=(args.device == "cuda"), drop_last=True)
     
     if args.domain_adaptation:
-        dataloader_da=DomainAdaptationDataLoader(groups[current_group_num], target_dataset, num_workers=args.num_workers,
-                                            batch_size=16, shuffle=True,
-                                            pin_memory=(args.device == "cuda"), drop_last=True)
+        dataloader_da=DomainAdaptationDataLoader(groups[current_group_num], target_dataset, pseudo_dataset = pseudo_groups[current_group_num] if args.pseudo_target_folder else None,
+                                                pseudo=args.pseudo_da,num_workers=args.num_workers,
+                                                batch_size=16, shuffle=True,
+                                                pin_memory=(args.device == "cuda"), drop_last=True)
 
     dataloader_iterator = iter(dataloader)
     model = model.train()

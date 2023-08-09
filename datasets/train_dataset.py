@@ -19,7 +19,7 @@ def open_image(path):
 
 class TrainDataset(torch.utils.data.Dataset):
     def __init__(self, args, dataset_folder, M=10, alpha=30, N=5, L=2,
-                 current_group=0, min_images_per_class=10):
+                 current_group=0, min_images_per_class=10, pseudo_target=False):
         """
         Parameters (please check our paper for a clearer explanation of the parameters).
         ----------
@@ -40,6 +40,7 @@ class TrainDataset(torch.utils.data.Dataset):
         self.current_group = current_group
         self.dataset_folder = dataset_folder
         self.augmentation_device = args.augmentation_device
+        self.pseudo_target = pseudo_target
         
         # dataset_name should be either "processed", "small" or "raw", if you're using SF-XL
         dataset_name = os.path.basename(args.dataset_folder)
@@ -90,7 +91,7 @@ class TrainDataset(torch.utils.data.Dataset):
         if self.augmentation_device == "cpu":
             tensor_image = self.transform(tensor_image)
         
-        return tensor_image, class_num, image_path
+        return tensor_image, class_num, 1 if self.pseudo_target else 0
     
     def get_images_num(self):
         """Return the number of images within this group."""
