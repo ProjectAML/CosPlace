@@ -10,7 +10,7 @@ import numpy as np
 
 class InfiniteDataLoader(torch.utils.data.DataLoader):
     def __init__(self, *args, **kwargs):
-            pseudo_dataset = None
+        pseudo_dataset = None
         if kwargs["pseudo_dataset"]:
             logging.debug("Pseudo in main branch")
             pseudo_dataset = kwargs["pseudo_dataset"]
