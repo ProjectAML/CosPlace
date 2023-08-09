@@ -45,7 +45,6 @@ class GeoLocalizationNet(nn.Module):
     def forward(self, x, grl=False):
         features = self.backbone(x)
         if grl==True:
-            print("with GRL")
             x=self.discriminator(features)
             return x
         return  self.aggregation(features)
