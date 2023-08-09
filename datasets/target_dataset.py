@@ -68,7 +68,7 @@ class DomainAdaptationDataLoader(data.DataLoader):
             self.target_domain_iterator = self.target_domain_loader.__iter__()
             target_data, target_labels  = next(self.target_domain_iterator)
 
-        if self.pseudo and self.pseudo_dataset:
+        if hasattr(self, 'pseudo_domain_loader'):
           try:
                 pseudo_data,_ ,pseudo_labels= next(self.pseudo_domain_iterator)
           except StopIteration:
