@@ -30,6 +30,10 @@ logging.info(f"There are {torch.cuda.device_count()} GPUs and {multiprocessing.c
 if args.resume_model is not None:
     logging.info(f"Loading model from {args.resume_model}")
     model_state_dict = torch.load(args.resume_model)
+    
+    if args.domain_adaptation:
+      model_state_dict = {k: v for k, v in model_state_dict.items() if not k.startswith("discriminator")}
+
     model.load_state_dict(model_state_dict)
 else:
     logging.info("WARNING: You didn't provide a path to resume the model (--resume_model parameter). " +
