@@ -13,6 +13,13 @@ CHANNELS_NUM_IN_LAST_CONV = {
     "ResNet50": 2048,
     "ResNet101": 2048,
     "ResNet152": 2048,
+    "ResNet18_gldv2": 512,
+    "ResNet18_places": 512,
+    "MobileNet_v3_small": 576,
+    "MobileNet_v3_large": 960,
+    "EfficientNet_b1": 1280,
+    "EfficientNet_b2": 1408,
+    "EfficientNet_v2_s": 1280,
     "VGG16": 512,
 }
 
@@ -66,6 +73,7 @@ def get_pretrained_torchvision_model(backbone_name : str) -> torch.nn.Module:
 def get_backbone(backbone_name : str) -> Tuple[torch.nn.Module, int]:
     backbone = get_pretrained_torchvision_model(backbone_name)
     if backbone_name.startswith("ResNet"):
+        
         for name, child in backbone.named_children():
             if name == "layer3":  # Freeze layers before conv_3
                 break
