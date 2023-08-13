@@ -50,7 +50,7 @@ def greedy_soup(models_list, args):
             greedy_soup_params = potential_greedy_soup_params
             print(f'Adding to soup.')
     
-    torch.save(greedy_soup_params, f"soups_output/{args.experiment_name}/soup.pth") 
+    torch.save(greedy_soup_params, f"soups_output/{args.models_combination}/soup.pth") 
 
 
 def uniform_soup(models_list,  args):
@@ -64,23 +64,13 @@ def uniform_soup(models_list,  args):
     agg_model = agg_model.to(args.device)
     agg_model = agg_model.eval()
 
-    val_ds = TestDataset("small/val", queries_folder="queries", positive_dist_threshold=args.positive_dist_threshold)
-    _, recalls_str,_ = test.test(args, val_ds, agg_model)
-    logging.info(f"{val_ds}: {recalls_str}")
-
-    val_ds = TestDataset("small/test", queries_folder="queries_v1", positive_dist_threshold=args.positive_dist_threshold)
-    _, recalls_str,_ = test.test(args, val_ds, agg_model)
-    logging.info(f"{val_ds}: {recalls_str}")
-
-    val_ds = TestDataset("tokyo_xs/test", queries_folder="queries_v1", positive_dist_threshold=args.positive_dist_threshold)
-    _, recalls_str,_ = test.test(args, val_ds, agg_model)
-    logging.info(f"{val_ds}: {recalls_str}")
-
-    val_ds = TestDataset("tokyo_xs/test", queries_folder="night", positive_dist_threshold=args.positive_dist_threshold)
-    _, recalls_str,_ = test.test(args, val_ds, agg_model)
-    logging.info(f"{val_ds}: {recalls_str}")
-
+    datasets=["sf_xs/val", "sf_xs/test", "tokyo_xs/test", "tokyo_night/test"]
     
+    for d in datasets:
+        val_ds = TestDataset(d, queries_folder="queries", positive_dist_threshold=args.positive_dist_threshold)
+        _, recalls_str,_ = test.test(args, val_ds, agg_model)
+        logging.info(f"{val_ds}: {recalls_str}")
+
     
 def compare(m1):
     return m1[1]
@@ -101,10 +91,14 @@ if __name__ == "__main__":
     args = parser.parse_arguments(is_training=False)
 
     base_path = "model/{}"
-    models_directories=["ablation_aug_hfull/all aug/model_all_hfull.pth", "ablation_aug_hfull/base/model_base_hfull.pth", "ablation_aug_hfull/blur+erasing/model_be_hfull.pth", "ablation_aug_hfull/blur+grayscale/model_bg_hfull.pth", "ablation_aug_hfull/erasing/model_e_hfull.pth", "ablation_aug_hfull/erasing+grayscale/model_eg_hfull.pth", "ablation_aug_hfull/gblur/model_g_hfull.pth", "ablation_aug_hfull/grayscale/model_g_hfull.pth", "ablation_aug_hfull/hflip/model_h_hfull.pth", "fda_only/fda_only.pth", "fda+grl/fda+grl.pth"]
-    val_rec = [78.0, 78.1, 78.0, 78.0, 77.9, 77.9, 78.1, 78.0, 78.1, 81.9, 81.9]
+    models_directories=[]
+    val_rec = []
     models_list = []
     for idx, model_path in enumerate(models_directories):
         m = load_model(base_path.format(model_path),args)
         models_list.append((m, val_rec[idx]))
-    greedy_soup(models_list, "/content/small/test/", args)
+    
+    if args.greedy_soup:
+        greedy_soup(models_list, args.dataset_folder, args)
+    if args.uniform_soup:
+        uniform_soup(models_list, args.dataset_folder, args)

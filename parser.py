@@ -71,7 +71,9 @@ def parse_arguments(is_training: bool = True):
     parser.add_argument("--loss_weight_grl", type=float, default=0.1)
     parser.add_argument("--pseudo_target_folder", type=str, default=None)
     parser.add_argument("--pseudo_da", type=bool, default=False)
-
+    parser.add_argument("--greedy_soup", type=bool, default=False)
+    parser.add_argument("--uniform_soup", type=bool, default=False)
+    parser.add_argument("--models_combination", type=str, default=None)
 
     args = parser.parse_args()
     
