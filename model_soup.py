@@ -1,9 +1,9 @@
 from datasets.test_dataset import TestDataset
 import test
-from model import network
+from cosplace_model import cosplace_network as network
 import torch
 from datetime import datetime
-import my_parser as parser
+import parser
 import os
 import commons
 import logging
@@ -17,14 +17,16 @@ def load_model(model_path,args):
 
 def greedy_soup(models_list, args):
     sorted_models = []
-    val_ds = TestDataset(args.test_set_folder, queries_folder=args.test_queries_folder,
+    val_ds = TestDataset(args.test_set_folder, queries_folder="queries",
                         positive_dist_threshold=args.positive_dist_threshold)
-
+    print("test set folder ", args.test_set_folder)
     for model in models_list:
         model = model.to(args.device)
         model = model.eval()       
         recalls, _ = test.test(args, val_ds, model)
         sorted_models.append((model, recalls[0]))
+        print("model,recalls", model, recalls)
+        print("sorted models", sorted_models)
 
     sorted_models.sort(key=compare, reverse=True)
     greedy_soup_ingredients = [sorted_models[0][0]]
@@ -48,9 +50,10 @@ def greedy_soup(models_list, args):
             greedy_soup_ingredients.append(sorted_models[i][0])
             best_val_rec = new_recall[0]
             greedy_soup_params = potential_greedy_soup_params
+            print("greedy soup params" , greedy_soup_params)
             print(f'Adding to soup.')
     
-    torch.save(greedy_soup_params, f"soups_output/{args.models_combination}/soup.pth") 
+    torch.save(greedy_soup_params, f"{args.models_combination}_greedy_soup.pth") 
 
 
 def uniform_soup(models_list,  args):
@@ -60,16 +63,18 @@ def uniform_soup(models_list,  args):
         soup[param] = sum([m.state_dict()[param].clone() for m in models_list]) / len(models_list)
     agg_model = network.GeoLocalizationNet(args.backbone, args.fc_output_dim)
     agg_model.load_state_dict(soup)
-    torch.save(agg_model.state_dict(),f"soup.pth")
+    torch.save(agg_model.state_dict(),f"{args.models_combination}_uniform_soup.pth")
     agg_model = agg_model.to(args.device)
     agg_model = agg_model.eval()
 
-    datasets=["sf_xs/val", "sf_xs/test", "tokyo_xs/test", "tokyo_night/test"]
+    datasets=["/content/codice/datasets/sf_xs/val", "/content/codice/datasets/sf_xs/test", "/content/codice/datasets/tokyo_xs/test", "/content/codice/datasets/tokyo_night/test"]
     
     for d in datasets:
+        print(d)
         val_ds = TestDataset(d, queries_folder="queries", positive_dist_threshold=args.positive_dist_threshold)
-        _, recalls_str,_ = test.test(args, val_ds, agg_model)
-        logging.info(f"{val_ds}: {recalls_str}")
+        recalls, recalls_str = test.test(args, val_ds, agg_model)
+        print(f'{val_ds}: {recalls_str}')
+
 
     
 def compare(m1):
@@ -90,15 +95,15 @@ if __name__ == "__main__":
 
     args = parser.parse_arguments(is_training=False)
 
-    base_path = "model/{}"
-    models_directories=[]
-    val_rec = []
+    base_path="/content/drive/MyDrive/AML2023/best_model/{}"
+    models_directories=["best_model224x224.pth", "best_model_sf_30_1.5.pth", "best_model_af_64_0.5.pth"]
     models_list = []
-    for idx, model_path in enumerate(models_directories):
+    for model_path in models_directories:
         m = load_model(base_path.format(model_path),args)
-        models_list.append((m, val_rec[idx]))
-    
+        models_list.append(m)
+        
+
     if args.greedy_soup:
-        greedy_soup(models_list, args.dataset_folder, args)
+        greedy_soup(models_list, args)
     if args.uniform_soup:
-        uniform_soup(models_list, args.dataset_folder, args)
+        uniform_soup(models_list, args)
