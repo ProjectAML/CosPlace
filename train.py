@@ -15,6 +15,7 @@ import commons
 import cosface_loss
 import sphereface_loss
 import arcface_loss
+import center_loss
 import augmentations
 from cosplace_model import cosplace_network
 from datasets.test_dataset import TestDataset
@@ -75,8 +76,15 @@ elif args.loss == "sphereface":
 elif args.loss == "arcface":
     logging.info("arcface loss is used")
     classifiers = [arcface_loss.ArcFaceLoss(args.fc_output_dim, len(group)) for group in groups]
+elif args.loss == "cosface_center":
+    logging.info("cosface_center loss is used")
+    for group in groups:
+        cosface_loss=[cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group))]
+        center_loss = [center_loss.CenterLoss(args.fc_output_dim, len(group))]
+        classifiers=[cosface_loss+center_loss]    
+    
 else:
-    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface'")
+    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface' or 'cosface_center'")
     exit
 
 classifiers_optimizers = [torch.optim.Adam(classifier.parameters(), lr=args.classifiers_lr) for classifier in classifiers]
