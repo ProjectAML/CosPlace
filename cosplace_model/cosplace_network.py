@@ -15,6 +15,7 @@ CHANNELS_NUM_IN_LAST_CONV = {
     "ResNet152": 2048,
     "MobileNet_v3_small": 576,
     "MobileNet_v3_large": 960,
+    "EfficientNet_b0": 1280,
     "EfficientNet_b1": 1280,
     "EfficientNet_b2": 1408,
     "EfficientNet_v2_s": 1280,
