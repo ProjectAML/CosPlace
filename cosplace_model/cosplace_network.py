@@ -19,6 +19,7 @@ CHANNELS_NUM_IN_LAST_CONV = {
     "EfficientNet_b1": 1280,
     "EfficientNet_b2": 1408,
     "EfficientNet_v2_s": 1280,
+    "ConvNeXt-B":1024,
     "VGG16": 512,
 }
 
@@ -101,6 +102,13 @@ def get_backbone(backbone_name : str) -> Tuple[torch.nn.Module, int]:
             for p in layer.parameters():
                 p.requires_grad = False
         logging.debug("Train last two layers of MobileNet, freeze the previous ones")
+
+    elif backbone_name.startswith("ConvNeXt"):
+        layers = list(backbone.features.children()) # Remove avg pooling and FC layer
+        for layer in layers[:-2]: # freeze all the layers except the last two
+            for p in layer.parameters():
+                p.requires_grad = False
+        logging.debug("Train last two layers of ConvNeXt, freeze the previous ones")
 
     backbone = torch.nn.Sequential(*layers)
     
