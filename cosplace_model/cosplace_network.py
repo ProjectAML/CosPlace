@@ -19,7 +19,7 @@ CHANNELS_NUM_IN_LAST_CONV = {
     "EfficientNet_b1": 1280,
     "EfficientNet_b2": 1408,
     "EfficientNet_v2_s": 1280,
-    "ConvNeXt-B":1024,
+    "ConvNeXt_Base":1024,
     "VGG16": 512,
 }
 
