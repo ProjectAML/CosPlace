@@ -83,7 +83,7 @@ elif args.loss == "center":
         calssifiers = [center_loss.CenterLoss(args.fc_output_dim, len(group), use_gpu)]
     
 else:
-    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface' or 'cosface_center'")
+    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface' or 'center'")
     exit
 
 classifiers_optimizers = [torch.optim.Adam(classifier.parameters(), lr=args.classifiers_lr) for classifier in classifiers]
