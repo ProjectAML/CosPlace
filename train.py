@@ -66,6 +66,7 @@ if args.pseudo_target_folder:
                         pseudo_target=True
                         ) for n in range(args.groups_num)]
 # Each group has its own classifier, which depends on the number of classes in the group
+use_gpu = torch.cuda.is_available()
 
 if args.loss == "cosface": 
     logging.info("cosface loss is used")
@@ -76,12 +77,10 @@ elif args.loss == "sphereface":
 elif args.loss == "arcface":
     logging.info("arcface loss is used")
     classifiers = [arcface_loss.ArcFaceLoss(args.fc_output_dim, len(group)) for group in groups]
-elif args.loss == "cosface_center":
-    logging.info("cosface_center loss is used")
+elif args.loss == "center":
+    logging.info("center loss is used")
     for group in groups:
-        cosface_loss=[cosface_loss.MarginCosineProduct(args.fc_output_dim, len(group))]
-        center_loss = [center_loss.CenterLoss(args.fc_output_dim, len(group))]
-        classifiers=[cosface_loss+center_loss]    
+        calssifiers = [center_loss.CenterLoss(args.fc_output_dim, len(group), use_gpu)]
     
 else:
     logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface' or 'cosface_center'")
