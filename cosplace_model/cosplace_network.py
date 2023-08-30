@@ -46,7 +46,6 @@ class GeoLocalizationNet(nn.Module):
             print("with GRL")
             self.discriminator=get_discriminator(features_dim)
         else:
-            print("without GRL")
             None
 
     def forward(self, x, grl=False):

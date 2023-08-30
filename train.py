@@ -15,7 +15,6 @@ import commons
 import cosface_loss
 import sphereface_loss
 import arcface_loss
-import center_loss
 import augmentations
 from cosplace_model import cosplace_network
 from datasets.test_dataset import TestDataset
@@ -77,13 +76,9 @@ elif args.loss == "sphereface":
 elif args.loss == "arcface":
     logging.info("arcface loss is used")
     classifiers = [arcface_loss.ArcFaceLoss(args.fc_output_dim, len(group)) for group in groups]
-elif args.loss == "center":
-    logging.info("center loss is used")
-    for group in groups:
-        calssifiers = [center_loss.CenterLoss(args.fc_output_dim, len(group), use_gpu)]
-    
+ 
 else:
-    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface' or 'center'")
+    logging.debug("No valid loss, please try again typing 'cosface', 'sphereface' or 'arcface'")
     exit
 
 classifiers_optimizers = [torch.optim.Adam(classifier.parameters(), lr=args.classifiers_lr) for classifier in classifiers]
@@ -138,7 +133,7 @@ if args.augmentation_device == "cuda":
     elif args.augmentation_type=="none":
         augmentation_applied=False
     else:
-        logging.debug("No valid augmentation type, please try again typing 'colorjitter', 'brightness' , 'contrast' , 'saturation' or 'none'")
+        logging.debug("No valid augmentation type, please try again typing 'colorjitter', 'brightness' , 'contrast' , 'saturation', 'brightness_contrast_saturation' or 'none'")
         exit
     
 if augmentation_applied:

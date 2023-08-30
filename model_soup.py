@@ -25,8 +25,6 @@ def greedy_soup(models_list, args):
         model = model.eval()       
         recalls, _ = test.test(args, val_ds, model)
         sorted_models.append((model, recalls[0]))
-        print("model,recalls", model, recalls)
-        print("sorted models", sorted_models)
 
     sorted_models.sort(key=compare, reverse=True)
     greedy_soup_ingredients = [sorted_models[0][0]]
@@ -70,7 +68,6 @@ def uniform_soup(models_list,  args):
     datasets=["/content/codice/datasets/sf_xs/val", "/content/codice/datasets/sf_xs/test", "/content/codice/datasets/tokyo_xs/test", "/content/codice/datasets/tokyo_night/test"]
     
     for d in datasets:
-        print(d)
         val_ds = TestDataset(d, queries_folder="queries", positive_dist_threshold=args.positive_dist_threshold)
         recalls, recalls_str = test.test(args, val_ds, agg_model)
         print(f'{val_ds}: {recalls_str}')
